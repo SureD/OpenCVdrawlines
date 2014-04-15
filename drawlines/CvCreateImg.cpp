@@ -1,6 +1,7 @@
 // Implement of CvCreatImg
 #include "StdAfx.h"
 #include "CvCreateImg.h"
+//#include "stdio.h"
 
 
 CvCreateImg :: CvCreateImg()
@@ -16,6 +17,7 @@ CvCreateImg :: CvCreateImg()
 	_height = cube().h();
 	m_X = _width/2;
 	m_Y = _height/2;
+	m_CutZ = 0;
 	//_wh.height = int(_height/5000);
 	//_wh.width = int(_width/5000);
 	//m_img = cvCreateImage(_wh,  IPL_DEPTH_8U, 3);
@@ -32,12 +34,15 @@ CvCreateImg :: CvCreateImg()
 		break;
 	case __medium:
 		  {
-				m_Xratio = 1280/_width;
-				m_Yratio = 720/_height;
-				m_cvsize.height =2000;
-				m_cvsize.width = 2000;
+				m_Xratio = 500/_width;
+				m_Yratio = 500/_height;
+//			    m_Xratio = 1;
+//				m_Yratio = 1;
+				m_cvsize.height = 720;
+				m_cvsize.width = 1280;
 				m_img = cvCreateImage(m_cvsize,  IPL_DEPTH_8U, 3);
 				cvZero(m_img); 
+				cvSet(m_img, cvScalar(  255 , 255 ,255  ));
 		  }
 		break;
 	case __large:
@@ -58,8 +63,9 @@ CvCreateImg :: ~CvCreateImg()
 
 }
 
-void CvCreateImg ::init(CZSlice p_slice)
+void CvCreateImg ::init(CZSlice p_slice,int CutZ)
 {
+	m_CutZ = CutZ;
 	CZSlice	m_fixslice = p_slice;
 	CZSlice m_slice1=m_fixslice;
 	m_RingNum = m_slice1.size();			
@@ -67,47 +73,36 @@ void CvCreateImg ::init(CZSlice p_slice)
 }
 BOOL CvCreateImg::ResetSlice(CZSlice m_slice1)
 {
-		m_pCvPoint = new CvPoint*[m_slice1.size()];
-		int *col = new int[m_slice1.size()];
-		for(int i=0; i<m_slice1.size(); i++)
-			for(int j=0; j<m_slice1[i].size(); j++)
+	int k =m_slice1.size();
+	m_pCvPoint = new CvPoint*[k];
+	int *col = new int[k];
+	for(int i=0; i<k; i++)
+		for(int j=0; j<m_slice1[i].size(); j++)
 			{
 				if (j == 0)
 				{
 					m_pCvPoint[i] = new CvPoint[m_slice1[i].size()];
 					col[i] = m_slice1[i].size();
 				}
-// 				m_slice1[i][j].x= m_fixslice[i][j].x * m_Xratio;
-// 				m_slice1[i][j].y= m_fixslice[i][j].y * -m_Yratio;
-// 				__tenx = m_slice1[i][j].x;
-// 				__teny = m_slice1[i][j].y;
-// 				m_pCvPoint[i][j].x = (int)m_slice1[i][j].x+640;
-// 				m_pCvPoint[i][j].y = (int)m_slice1[i][j].y+360;
-				m_pCvPoint[i][j].x = (int)(m_slice1[i][j].x+m_X) * m_Xratio+500;
- 				m_pCvPoint[i][j].y = (int)(m_slice1[i][j].y+m_Y) * m_Yratio+500;
+				m_pCvPoint[i][j].x = (int)(m_slice1[i][j].x+m_X) * m_Xratio + 60;
+ 				m_pCvPoint[i][j].y = (int)(m_slice1[i][j].y+m_Y) * m_Yratio + 25;
 				m_PointCounts++;
 			}
-	for (int k=0; k<m_slice1.size();k++)
-	{
-		int p = m_slice1[k].size();
-		cvPolyLine(m_img, &m_pCvPoint[k] , &p, 1 , 1 ,cvScalar(  255 , 255 ,255  ), 2 );
-	}
-// 		for (i=0;i<m_slice1[0].size()-1;i++)
-// 		{		
-// // 			if (i==m_slice1[0].size())
-// // 					{
-// // 						cvLine(m_img,m_pCvPoint[0][i],m_pCvPoint[0][0],cvScalar(  255 , 255 ,0  ));
-// // 					}
-// 			cvLine(m_img,m_pCvPoint[0][i],m_pCvPoint[0][i+1],cvScalar(  255 , 255 ,0  ));
-// 		}
-// cvLine(m_img,m_pCvPoint[0][m_slice1[0].size()-1],m_pCvPoint[0][0],cvScalar(  255 , 255 ,0  ));
-	
-	cvSaveImage("I:\\3Ddata\\a.bmp",m_img);
-//	cvSave("point.txt",m_pCvPoint);
+	for (int ii=0; ii<k;ii++)
+		{
+			int p = m_slice1[ii].size();
+			cvPolyLine(m_img, &m_pCvPoint[ii] , &p, 1 , 1 ,cvScalar(  0 , 0 ,0  ), 2 );
+		}
+	char _bmpfilename[256] ={0} ;
+	sprintf(_bmpfilename,"G:\\3Ddata\\figure\\%d.bmp",m_CutZ);
+	//const char __filename[256] = _filename;
+	cvSaveImage(_bmpfilename,m_img);
+	//cvSaveImage("I:\\3Ddata\\a.bmp",m_img);
+	char _txtfilename[256] = {0};
+	sprintf(_bmpfilename,"G:\\3Ddata\\txt\\%d.txt",m_CutZ);
+	SavePoints(m_pCvPoint, m_slice1.size(),col,_bmpfilename);
+	//SavePoints(m_pCvPoint, m_slice1.size(),col,"I:\\3Ddata\\points.txt");
 
-	SavePoints(m_pCvPoint, m_slice1.size(),col,"I:\\3Ddata\\points.txt");
-
-	//m_pCvPoint1 =NULL;
 	delete [] col;
 	return 1;
 	
@@ -125,7 +120,7 @@ VOID CvCreateImg::SavePoints(CvPoint **__point,int __row,int* __col,LPCTSTR lpFi
 			if (j==0)
 			{
 				outfile<<std::endl;
-				outfile<<"Ring"<<std::endl;
+				outfile<<"Ring:"<<std::endl;
 			}
 			__tempPoint=__point[i][j];
 			outfile<<__tempPoint.x<<","<<" ";
@@ -133,11 +128,19 @@ VOID CvCreateImg::SavePoints(CvPoint **__point,int __row,int* __col,LPCTSTR lpFi
 			//outfile<<endl;
 		}
 	}
-	outfile<<std::endl<<"Ratio"<<std::endl<<m_Xratio<<","<<m_Yratio<<std::endl;
-	outfile<<"最大XY"<<std::endl<<m_X<<","<<m_Y;
+	outfile<<std::endl<<"Ratio:"<<std::endl<<"X缩放率: "<<m_Xratio<<","<<"Y缩放率: "<<m_Yratio<<std::endl;
+	outfile<<"最大XY: "<<std::endl<<"X: "<<m_X<<","<<"Y: "<<m_Y<<std::endl;
+	outfile<<"切割深度: "<<std::endl<<m_CutZ;
 }
 BOOL CvCreateImg::Drawlines(void) 
 {
 
 	return 0;
+}
+void CvCreateImg::gDump(ostream &p_os) const
+{
+	for (int i = 0 ; i<m_fixslice.size(); i++)
+	{
+		m_fixslice[i].gDump(p_os);
+	}
 }

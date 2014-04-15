@@ -2,7 +2,8 @@
 #include "TEACDef.h"
 #include "cv.h"
 #include "highgui.h"
-
+#pragma   comment(lib,"cv.lib")  
+#pragma   comment(lib,"highgui.lib")
 #include "iostream"
 #include <fstream>
 //CvCreatImg.h 利用OpenCV 通过ZSlice/ZRing 产生图像数据
@@ -27,7 +28,7 @@ public:
 	CvCreateImg();
 	~CvCreateImg(void) ;
 	//init
-	void init(CZSlice p_slice);
+	void init(CZSlice p_slice,int CutZ);
 	// calculate min&max of the slice
 // 	int minX();
 // 	int maxX();
@@ -42,6 +43,8 @@ public:
 	// draw
 	BOOL Drawlines(void) ;
 	void SavePoints(CvPoint **__point,int __row,int *__col, LPCTSTR lpFileName);
+	//IplImage * getImg() {return m_img};
+	void gDump(ostream &p_os) const;
 
 private:
 	CZSlice m_fixslice;
@@ -49,6 +52,7 @@ private:
 	int m_RingNum;
 	float m_minX, m_minY ,m_X,m_Y;
 	int m_Paint_wid;
+	int m_CutZ;
 	ImgResolution m_ImgResolution;
 	IplImage* m_img;
 	CvSize m_cvsize;
